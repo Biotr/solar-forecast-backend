@@ -61,7 +61,7 @@ def get_summary(data: dict) -> dict:
 
 def get_daily_forecast(data: dict, *, power: float, efficiency: float) -> dict:
 
-    daily_energy = list()
+    daily_energy = []
     days = len(data["time"])
     for day in range(0, days):
         energy = power * data["sunshine_duration"][day] / 3600 * efficiency
@@ -88,14 +88,14 @@ def request_data(url: str) -> dict:
 @app.get("/summary")
 def summary(latitude: float, longitude: float) -> dict:
     if not (-90 < latitude < 90) or not (-180 < longitude < 180):
-        raise HTTPException(status_code=404, detail="Langitude or longitude not in range")
+        raise HTTPException(status_code=422, detail="Langitude or longitude not in range")
 
     url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=sunshine_duration,showers_sum&hourly=pressure_msl,temperature_2m"
     data = request_data(url)
     try:
         summary_data = get_summary(data)
-    except KeyError:
-        raise HTTPException(status_code=502, detail="Error fetching data from external service")
+    except KeyError as e:
+        raise HTTPException(status_code=502, detail=f"Missing key in API data:{e}")
 
     return summary_data
 
@@ -104,7 +104,10 @@ def summary(latitude: float, longitude: float) -> dict:
 def daily_forecast(latitude: float, longitude: float, power: float, efficiency: float) -> dict:
 
     if not (-90 < latitude < 90) or not (-180 < longitude < 180):
-        raise HTTPException(status_code=404, detail="Langitude or longitude not in range")
+        raise HTTPException(status_code=422, detail="Langitude or longitude not in range")
+
+    if efficiency > 1 or efficiency < 0:
+        raise HTTPException(status_code=422, detail="Efficiency not in range")
 
     url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=weather_code,sunshine_duration,temperature_2m_min,temperature_2m_max"
     data = request_data(url)

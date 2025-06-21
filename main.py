@@ -26,7 +26,7 @@ def get_summary(data: dict) -> dict:
     min_temperature = min(hourly_temperature)
 
     daily_sunshine = data["daily"]["sunshine_duration"]
-    average_sunshine = math.floor(sum(daily_sunshine) / len(daily_sunshine)) if daily_sunshine != 0 else 0
+    average_sunshine = math.floor(sum(daily_sunshine) / len(daily_sunshine))
 
     week_avg_temperature = sum(hourly_temperature) / len(hourly_temperature)
     if week_avg_temperature < 5:

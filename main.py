@@ -1,8 +1,8 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-import requests
 import math
 
+import requests
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
@@ -60,7 +60,6 @@ def get_summary(data: dict) -> dict:
 
 
 def get_daily_forecast(data: dict, *, power: float, efficiency: float) -> dict:
-
     daily_energy = []
     days = len(data["time"])
     for day in range(0, days):
@@ -92,6 +91,7 @@ def summary(latitude: float, longitude: float) -> dict:
 
     url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=sunshine_duration,showers_sum&hourly=pressure_msl,temperature_2m"
     data = request_data(url)
+
     try:
         summary_data = get_summary(data)
     except KeyError as e:
@@ -102,7 +102,6 @@ def summary(latitude: float, longitude: float) -> dict:
 
 @app.get("/dailyforecast")
 def daily_forecast(latitude: float, longitude: float, power: float, efficiency: float) -> dict:
-
     if not (-90 < latitude < 90) or not (-180 < longitude < 180):
         raise HTTPException(status_code=422, detail="Langitude or longitude not in range")
 

@@ -86,7 +86,7 @@ def request_data(url: str) -> dict:
 
 @app.get("/summary")
 def summary(latitude: float, longitude: float) -> dict:
-    if not (-90 < latitude < 90) or not (-180 < longitude < 180):
+    if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
         raise HTTPException(status_code=422, detail="Langitude or longitude not in range")
 
     url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=sunshine_duration,showers_sum&hourly=pressure_msl,temperature_2m"
@@ -102,7 +102,7 @@ def summary(latitude: float, longitude: float) -> dict:
 
 @app.get("/dailyforecast")
 def daily_forecast(latitude: float, longitude: float, power: float, efficiency: float) -> dict:
-    if not (-90 < latitude < 90) or not (-180 < longitude < 180):
+    if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
         raise HTTPException(status_code=422, detail="Langitude or longitude not in range")
 
     if efficiency > 1 or efficiency < 0:

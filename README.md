@@ -47,7 +47,7 @@ Parameters:
 | latitude  | float | -90 to 90   |
 | longitude | float | -180 to 180 |
 | efficiency  | float | 0 to 1   |
-| power | float | - |
+| power | float | 0> |
 
 Output:
 | Name      | Type  |

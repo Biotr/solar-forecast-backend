@@ -1,17 +1,18 @@
 import math
+from typing import Annotated
 
-import requests
-from fastapi import FastAPI, HTTPException
+import httpx
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-origins = ["*"]
+origins = ["solar-forecast-frontend.onrender.com"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -75,22 +76,21 @@ def get_daily_forecast(data: dict, *, power: float, efficiency: float) -> dict:
     }
 
 
-def request_data(url: str) -> dict:
+async def request_data(url: str) -> dict:
     try:
-        response = requests.get(url)
-        response.raise_for_status()
-        return response.json()
+        async with httpx.AsyncClient(timeout=120) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            return response.json()
     except:
         raise HTTPException(status_code=502, detail=f"Error fetching data from external service")
 
 
 @app.get("/summary")
-def summary(latitude: float, longitude: float) -> dict:
-    if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
-        raise HTTPException(status_code=422, detail="Langitude or longitude not in range")
+async def summary(latitude: Annotated[float, Query(ge=-90, le=90)], longitude: Annotated[float, Query(ge=-180, le=180)]) -> dict:
 
     url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=sunshine_duration,showers_sum&hourly=pressure_msl,temperature_2m"
-    data = request_data(url)
+    data = await request_data(url)
 
     try:
         summary_data = get_summary(data)
@@ -101,15 +101,10 @@ def summary(latitude: float, longitude: float) -> dict:
 
 
 @app.get("/dailyforecast")
-def daily_forecast(latitude: float, longitude: float, power: float, efficiency: float) -> dict:
-    if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
-        raise HTTPException(status_code=422, detail="Langitude or longitude not in range")
-
-    if efficiency > 1 or efficiency < 0:
-        raise HTTPException(status_code=422, detail="Efficiency not in range")
+async def daily_forecast(latitude: Annotated[float, Query(ge=-90, le=90)], longitude: Annotated[float, Query(ge=-180, le=180)], power: Annotated[float, Query(gt=0)], efficiency: Annotated[float, Query(ge=0, le=1)]) -> dict:
 
     url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=weather_code,sunshine_duration,temperature_2m_min,temperature_2m_max"
-    data = request_data(url)
+    data = await request_data(url)
 
     try:
         weather_data = get_daily_forecast(data["daily"], power=power, efficiency=efficiency)

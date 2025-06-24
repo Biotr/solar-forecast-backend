@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-origins = ["solar-forecast-frontend.onrender.com"]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
